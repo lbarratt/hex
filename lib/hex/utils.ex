@@ -258,7 +258,13 @@ defmodule Hex.Utils do
 
     if uri.host && uri.port do
       host = String.to_char_list(uri.host)
-      :httpc.set_options([{proxy_scheme(scheme), {{host, uri.port}, []}}], :hex)
+
+      case :httpc.get_options([proxy_scheme(scheme)], :hex) do
+        {:error, _} ->
+          :httpc.set_options([{proxy_scheme(scheme), {{host, uri.port}, []}}], :hex)
+        _ ->
+          uri
+      end
     end
 
     uri

@@ -39,4 +39,16 @@ defmodule Hex.UtilsTest do
 
     assert Hex.Utils.proxy_config("http://hex.pm") == []
   end
+
+  test "proxy_config does not overwrite httpc proxy options if they are already set" do
+    :httpc.set_options([{:proxy, {{'example.com', 80}, ['example.com']}}], :hex)
+    {:ok, [proxy: {{initial_host, _}, _}]} = :httpc.get_options([:proxy], :hex)
+
+    Hex.State.put(:http_proxy, "http://test.com")
+    Hex.Utils.proxy_config("http://hex.pm")
+    {:ok, [proxy: {{new_host, _}, _}]} = :httpc.get_options([:proxy], :hex)
+
+    assert initial_host == 'example.com'
+    assert new_host == 'example.com'
+  end
 end
